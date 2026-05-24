@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Aurea Luna Status",
+  "schemaVersion": 1,
+  "description": "Tableau de bord de lancement Aurea-Luna — progression, checklist build, étapes manuelles restantes, guide tags collections",
+  "mcpTools": [
+    "mcp__653597b5-c261-477f-aaa6-574841700965__get-shop-info",
+    "mcp__653597b5-c261-477f-aaa6-574841700965__list-orders",
+    "mcp__653597b5-c261-477f-aaa6-574841700965__search_products"
+  ],
+  "mcpServerNames": [
+    "Shopify",
+    "Shopify",
+    "Shopify"
+  ]
+}
+</script>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurea·Luna — Tableau de bord lancement</title>
+<style>
+  :root {
+    --gold: #C9A55A;
+    --gold-light: #E8D5A3;
+    --dark: #0A0906;
+    --surface: #1A1612;
+    --surface2: #242018;
+    --border: rgba(201,165,90,0.2);
+    --text: #F4EDE3;
+    --text-dim: #9B8F80;
+    --green: #4CAF7D;
+    --green-bg: rgba(76,175,125,0.12);
+    --orange: #E8963A;
+    --orange-bg: rgba(232,150,58,0.12);
+    --red: #E85A5A;
+    --red-bg: rgba(232,90,90,0.12);
+    --blue: #5A9BE8;
+    --blue-bg: rgba(90,155,232,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-size: 20px; font-weight: 600; letter-spacing: 0.05em; }
+  .logo span { color: var(--gold); }
+  .pulse-badge {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-dim);
+  }
+  .pulse {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 0 rgba(76,175,125,0.4);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(76,175,125,0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(76,175,125,0); }
+    100% { box-shadow: 0 0 0 0 rgba(76,175,125,0); }
+  }
+
+  /* Progress Banner */
+  .progress-banner {
+    background: linear-gradient(135deg, #1A1A0E 0%, #1E1A0F 50%, #1A1612 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 24px;
+    text-align: center;
+  }
+  .progress-banner h2 {
+    font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 12px;
+  }
+  .big-progress {
+    font-size: 48px; font-weight: 700; color: var(--gold);
+    line-height: 1; margin-bottom: 8px;
+  }
+  .progress-label { font-size: 14px; color: var(--text-dim); margin-bottom: 20px; }
+  .progress-bar-wrap {
+    background: var(--surface2);
+    border-radius: 99px; height: 8px;
+    max-width: 500px; margin: 0 auto 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #9E7D38, #C9A55A, #E8D5A3);
+    border-radius: 99px;
+    width: 72%;
+    transition: width 0.8s ease;
+  }
+  .step-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .chip {
+    padding: 5px 12px; border-radius: 99px; font-size: 12px;
+    font-weight: 500; border: 1px solid;
+  }
+  .chip-done { background: var(--green-bg); border-color: rgba(76,175,125,0.3); color: var(--green); }
+  .chip-action { background: var(--orange-bg); border-color: rgba(232,150,58,0.4); color: var(--orange); }
+  .chip-later { background: rgba(90,155,232,0.08); border-color: rgba(90,155,232,0.2); color: var(--blue); }
+
+  /* Content */
+  .content { padding: 24px; max-width: 900px; margin: 0 auto; }
+
+  /* Action Alert */
+  .action-alert {
+    background: linear-gradient(135deg, rgba(201,165,90,0.15), rgba(201,165,90,0.05));
+    border: 1px solid var(--gold);
+    border-radius: 12px; padding: 20px 24px; margin-bottom: 24px;
+  }
+  .action-alert-header {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 10px;
+  }
+  .action-alert-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .action-alert-desc { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+  .action-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 14px; padding: 10px 20px;
+    background: var(--gold); color: var(--dark);
+    border-radius: 8px; font-weight: 600; font-size: 13px;
+    text-decoration: none; cursor: pointer; border: none;
+    transition: background 0.2s;
+  }
+  .action-btn:hover { background: #E8D5A3; }
+
+  /* Section title */
+  .section-title {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 14px; margin-top: 32px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: var(--border);
+  }
+
+  /* Checklist */
+  .checklist { display: flex; flex-direction: column; gap: 10px; }
+  .check-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+    display: flex; align-items: flex-start; gap: 14px;
+    transition: border-color 0.2s;
+  }
+  .check-item:hover { border-color: rgba(201,165,90,0.35); }
+  .check-icon {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0; margin-top: 1px;
+  }
+  .icon-done { background: var(--green-bg); color: var(--green); }
+  .icon-urgent { background: var(--orange-bg); color: var(--orange); }
+  .icon-manual { background: var(--blue-bg); color: var(--blue); }
+  .icon-later { background: rgba(100,100,100,0.12); color: #888; }
+  .check-body { flex: 1; }
+  .check-title { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+  .check-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 99px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
+    text-transform: uppercase; margin-left: 8px; vertical-align: middle;
+  }
+  .tag-done { background: var(--green-bg); color: var(--green); }
+  .tag-urgent { background: var(--orange-bg); color: var(--orange); }
+  .tag-manual { background: var(--blue-bg); color: var(--blue); }
+  .tag-auto { background: rgba(201,165,90,0.12); color: var(--gold); }
+
+  /* Collections grid */
+  .coll-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+  .coll-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px;
+  }
+  .coll-card-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .coll-card-type { font-size: 11px; color: var(--text-dim); }
+  .coll-card-status {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--green); margin-top: 6px;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px; margin-bottom: 0;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px;
+    text-align: center;
+  }
+  .stat-number { font-size: 28px; font-weight: 700; color: var(--gold); }
+  .stat-label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+  /* Next steps numbered */
+  .steps-numbered { counter-reset: step; display: flex; flex-direction: column; gap: 12px; }
+  .step-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 18px;
+    display: flex; align-items: flex-start; gap: 16px;
+    position: relative;
+  }
+  .step-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--gold); color: var(--dark);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+  .step-num.manual { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
+  .step-body h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .step-body p { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .step-path {
+    font-size: 11px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 4px 8px; color: var(--gold); margin-top: 6px;
+    font-family: monospace; display: inline-block;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center; padding: 24px;
+    font-size: 12px; color: var(--text-dim);
+    border-top: 1px solid var(--border); margin-top: 40px;
+  }
+  .footer strong { color: var(--gold); }
+
+  @media (max-width: 600px) {
+    .big-progress { font-size: 36px; }
+    .content { padding: 16px; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Aurea<span>·</span>Luna</div>
+  <div class="pulse-badge">
+    <div class="pulse"></div>
+    Tableau de bord — 20 mai 2026
+  </div>
+</div>
+
+<div class="progress-banner">
+  <h2>Progression du lancement</h2>
+  <div class="big-progress">72%</div>
+  <div class="progress-label">Le thème premium est prêt — publication manuelle requise</div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill"></div>
+  </div>
+  <div class="step-chips">
+    <span class="chip chip-done">✓ Thème premium</span>
+    <span class="chip chip-done">✓ 14 collections</span>
+    <span class="chip chip-done">✓ Pages créées</span>
+    <span class="chip chip-action">⚡ Publier le thème</span>
+    <span class="chip chip-action">⚡ Navigation</span>
+    <span class="chip chip-action">⚡ Produits</span>
+    <span class="chip chip-later">→ Paiements africains</span>
+    <span class="chip chip-later">→ Marchés internationaux</span>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- ACTION REQUIRED -->
+  <div class="action-alert">
+    <div class="action-alert-header">
+      <span>⚡</span> Action prioritaire
+    </div>
+    <div class="action-alert-title">Publiez le thème "Shopistart" dès maintenant</div>
+    <div class="action-alert-desc">
+      Tout le design premium a été construit sur le thème <strong>Shopistart</strong> (non publié).
+      Il suffit d'aller dans votre admin Shopify → <em>Boutique en ligne → Thèmes</em> →
+      trouver "Shopistart" → cliquer <strong>Publier</strong>.
+      Votre site aura immédiatement le look Sephora/Nocibé.
+    </div>
+    <button class="action-btn" onclick="window.open('https://admin.shopify.com/store/aurea-luna/themes', '_blank')">
+      → Ouvrir Shopify Thèmes
+    </button>
+  </div>
+
+  <!-- STATS -->
+  <div class="section-title">Ce qui a été construit</div>
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-number">25+</div>
+      <div class="stat-label">Fichiers thème créés</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">14</div>
+      <div class="stat-label">Collections créées</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">7</div>
+      <div class="stat-label">Sections homepage</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">3</div>
+      <div class="stat-label">Pages créées</div>
+    </div>
+  </div>
+
+  <!-- BUILD CHECKLIST -->
+  <div class="section-title">Construction du thème</div>
+  <div class="checklist">
+    <div class="check-item">
+      <div class="check-icon icon-done">✓</div>
+      <div class="check-body">
+        <div class="check-title">Design premium champagne & noir <span class="tag tag-done">Fait</span></div>
+        <div class="check-desc">Palette or champagne (#C9A55A), fond noir, fonts Cormorant Garamond + Jost. Header sombre avec barre d'annonce internationale.</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon icon-done">✓</div>
+      <div class="check-body">
+        <div class="check-title">Homepage premium 7 sections <span class="tag tag-done">Fait</span></div>
+        <div class="check-desc">Hero plein écran · Univers Beauté & Tech · Best-sellers · Grid collections · Nouveautés · Badges de confiance · Newsletter</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon icon-done">✓</div>
+      <div class="check-body">
+        <div class="check-title">Hero avec origines géographiques <span class="tag tag-done">Fait</span></div>
+        <div class="check-desc">🇰🇷 🇫🇷 🇺🇸 🇲🇾 — texte d'accroche fort, 2 CTA (Découvrir + Best-sellers). Fond dégradé sombre premium par défaut.</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon icon-done">✓</div>
+      <div class="check-body">
+        <div class="check-title">Footer avec paiements africains <span class="tag tag-done">Fait</span></div>
+        <div class="check-desc">Badges Wave · Orange Money · MTN MoMo · Visa · Mastercard · PayPal. Livraison : Côte d'Ivoire, Afrique de l'Ouest, Europe, International.</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon icon-done">✓</div>
+      <div class="check-body">
+        <div class="check-title">14 collections smart créées <span class="tag tag-done">Fait</span></div>
+        <div class="check-desc">K-Beauty · Français · Américains · Malaisiens · Maquillage · Skincare · Parfums · Accessoires Beauté · Électronique · Smartphones · Ordinateurs · Nouveautés · Tendances · Best Sellers</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon icon-done">✓</div>
+      <div class="check-body">
+        <div class="check-title">Pages informatives créées <span class="tag tag-done">Fait</span></div>
+        <div class="check-desc">📄 Livraison & Paiements · FAQ Questions fréquentes · À propos (existait déjà)</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon icon-done">✓</div>
+      <div class="check-body">
+        <div class="check-title">Annonce bar internationale <span class="tag tag-done">Fait</span></div>
+        <div class="check-desc">🌍 Livraison internationale | 💳 Wave · Orange Money · MTN · Visa | ✨ Sélection premium curatée</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLLECTIONS GRID -->
+  <div class="section-title">Collections créées (14)</div>
+  <div class="coll-grid">
+    <div class="coll-card">
+      <div class="coll-card-name">🇰🇷 K-Beauty Coréens</div>
+      <div class="coll-card-type">Smart · tag: k-beauty</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">🇫🇷 Cosmétiques Français</div>
+      <div class="coll-card-type">Smart · tag: cosmetiques-francais</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">🇺🇸 Cosmétiques Américains</div>
+      <div class="coll-card-type">Smart · tag: cosmetiques-americains</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">🇲🇾 Cosmétiques Malaisiens</div>
+      <div class="coll-card-type">Smart · tag: cosmetiques-malaisiens</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">💄 Maquillage</div>
+      <div class="coll-card-type">Smart · tag: maquillage</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">✨ Skincare & Soins</div>
+      <div class="coll-card-type">Smart · tag: skincare</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">🌸 Parfums & Brumes</div>
+      <div class="coll-card-type">Smart · tag: parfums</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">💅 Accessoires Beauté</div>
+      <div class="coll-card-type">Smart · tag: accessoires-beaute</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">📱 Électronique & Gadgets</div>
+      <div class="coll-card-type">Smart · tag: electronique</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">📲 Smartphones & Accessoires</div>
+      <div class="coll-card-type">Smart · tag: smartphones</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">💻 Ordinateurs & High-Tech</div>
+      <div class="coll-card-type">Smart · tag: ordinateurs</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">✨ Nouveautés</div>
+      <div class="coll-card-type">Smart · tag: nouveau</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">🔥 Tendances du Moment</div>
+      <div class="coll-card-type">Smart · tag: tendance</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+    <div class="coll-card">
+      <div class="coll-card-name">⭐ Best Sellers</div>
+      <div class="coll-card-type">Smart · tag: best-seller</div>
+      <div class="coll-card-status">✓ Active</div>
+    </div>
+  </div>
+
+  <!-- NEXT STEPS -->
+  <div class="section-title">Étapes pour publier aujourd'hui</div>
+  <div class="steps-numbered">
+
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Publier le thème Shopistart ⚡ PRIORITÉ ABSOLUE</h4>
+        <p>Shopify Admin → Boutique en ligne → Thèmes → "Shopistart" → cliquer <strong>Publier</strong>. C'est la seule action bloquante — tout le reste du design est prêt.</p>
+        <span class="step-path">admin.shopify.com/store/aurea-luna/themes</span>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Configurer la navigation principale</h4>
+        <p>Admin → Navigation → Menu principal. Ajouter : Beauté (collections), K-Beauty, Skincare, Maquillage, Tech & Gadgets, Best Sellers, Nouveautés.</p>
+        <span class="step-path">admin.shopify.com/store/aurea-luna/menus</span>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Ajouter l'image hero bannière</h4>
+        <p>Admin → Thèmes → Personnaliser → Section Hero → Upload une belle photo beauté/cosmétiques. Sans image, le fond dégradé sombre est déjà en place.</p>
+        <span class="step-path">admin.shopify.com/store/aurea-luna/themes → Personnaliser</span>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Importer des produits via CJdropshipping & Dsers</h4>
+        <p>Apps déjà installées. Chercher : soins coréens (COSRX, Some By Mi), cosmétiques tendance, gadgets beauté, accessoires tech premium. <strong>Important :</strong> lors de l'import, ajouter les tags correspondants (k-beauty, skincare, maquillage, etc.) pour que les collections se remplissent automatiquement.</p>
+        <span class="step-path">admin.shopify.com/store/aurea-luna/apps</span>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num manual">5</div>
+      <div class="step-body">
+        <h4>Configurer les paiements africains (Wave, Orange Money, MTN)</h4>
+        <p>Installer <strong>CinetPay</strong>, <strong>DPO Group</strong>, ou <strong>Flutterwave</strong> depuis le Shopify App Store. Ces apps activent Wave, Orange Money et MTN MoMo pour la Côte d'Ivoire et l'Afrique.</p>
+        <span class="step-path">admin.shopify.com/store/aurea-luna/settings/payments</span>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num manual">6</div>
+      <div class="step-body">
+        <h4>Configurer les marchés internationaux</h4>
+        <p>Admin → Paramètres → Marchés. Activer Côte d'Ivoire, autres pays africains, Europe, International. Configurer le XOF (Franc CFA), EUR, USD pour le multi-devises.</p>
+        <span class="step-path">admin.shopify.com/store/aurea-luna/settings/markets</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAGGING GUIDE -->
+  <div class="section-title">Guide tags produits (collections auto)</div>
+  <div class="checklist">
+    <div class="check-item">
+      <div class="check-icon" style="background:rgba(201,165,90,0.1);color:var(--gold);font-size:16px;">🏷</div>
+      <div class="check-body">
+        <div class="check-title">Tags à appliquer lors de l'import produits</div>
+        <div class="check-desc" style="line-height:2;">
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">k-beauty</code> → K-Beauty Coréens &nbsp;·&nbsp;
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">cosmetiques-francais</code> → Cosmétiques Français &nbsp;·&nbsp;
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">cosmetiques-americains</code> → Américains<br>
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">cosmetiques-malaisiens</code> → Malaisiens &nbsp;·&nbsp;
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">maquillage</code> → Maquillage &nbsp;·&nbsp;
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">skincare</code> → Skincare<br>
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">parfums</code> → Parfums &amp; Brumes &nbsp;·&nbsp;
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">accessoires-beaute</code> → Accessoires Beauté<br>
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">electronique</code> → Électronique &nbsp;·&nbsp;
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">smartphones</code> → Smartphones &nbsp;·&nbsp;
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">ordinateurs</code> → Ordinateurs<br>
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">nouveau</code> → Nouveautés &nbsp;·&nbsp;
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">tendance</code> → Tendances &nbsp;·&nbsp;
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;">best-seller</code> → Best Sellers
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Construit pour <strong>Aurea·Luna</strong> — Boutique beauté premium internationale ·
+  Thème Shopistart (ID: 185565413667) prêt à publier
+</div>
+
+</body>
+</html>
