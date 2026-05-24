@@ -1,188 +1,210 @@
 /**
- * Aurea Luna - Dashboard JavaScript
- * Main functionality and interactions
+ * AUREA LUNA - Main JavaScript
+ * Dashboard functionality and interactions
  */
 
-// Initialize dashboard
+// ===== SECURE SHOPIFY LINK HANDLER =====
+function openShopifyThemes() {
+  // Store reference securely and open in new tab
+  const isConfirmed = confirm(
+    'Vous allez être redirigé vers votre tableau de bord Shopify.\n\n' +
+    'Assurez-vous d\'être connecté à votre compte Shopify pour accéder à la section des thèmes.'
+  );
+
+  if (isConfirmed) {
+    // Use a secure method to open - don't hardcode sensitive URLs in HTML
+    const storeSubdomain = 'aurea-luna';
+    const adminUrl = `https://admin.shopify.com/store/${storeSubdomain}/themes`;
+
+    // Open in new tab/window
+    window.open(adminUrl, '_blank', 'noopener,noreferrer');
+  }
+}
+
+// ===== SMOOTH SCROLL FOR INTERNAL LINKS =====
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Aurea Luna Dashboard initialized');
-  initializeEventListeners();
-  loadDashboardData();
+  initializeSmoothScroll();
+  initializeProgressBar();
+  initializeObservers();
+  initializeAccessibility();
 });
 
-/**
- * Initialize all event listeners
- */
-function initializeEventListeners() {
-  // Action buttons
-  document.querySelectorAll('.action-btn').forEach(button => {
-    button.addEventListener('click', handleActionClick);
-  });
-
-  // Internal smooth scrolling links
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', handleSmoothScroll);
-  });
-
-  // Hover effects
-  document.querySelectorAll('.coll-card, .stat-card, .step-item').forEach(card => {
-    card.addEventListener('mouseenter', function() {
-      this.style.transform = 'translateY(-2px)';
-    });
-    card.addEventListener('mouseleave', function() {
-      this.style.transform = 'translateY(0)';
-    });
-  });
-}
-
-/**
- * Handle action button clicks
- */
-function handleActionClick(event) {
-  const buttonText = event.target.textContent.trim();
-  console.log('Action clicked:', buttonText);
+function initializeSmoothScroll() {
+  const links = document.querySelectorAll('a[href^="#"]');
   
-  // Log custom event for analytics
-  if (window.gtag) {
-    gtag('event', 'dashboard_action', {
-      'action': buttonText
-    });
-  }
-}
-
-/**
- * Handle smooth scrolling
- */
-function handleSmoothScroll(event) {
-  event.preventDefault();
-  const targetId = this.getAttribute('href');
-  const target = document.querySelector(targetId);
-  
-  if (target) {
-    target.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    });
-  }
-}
-
-/**
- * Load and display dashboard data
- */
-function loadDashboardData() {
-  // Update progress bar dynamically if needed
-  updateProgressBar();
-  
-  // Load saved preferences from localStorage
-  loadUserPreferences();
-}
-
-/**
- * Update progress bar animation
- */
-function updateProgressBar() {
-  const progressBar = document.querySelector('.progress-bar-fill');
-  if (progressBar) {
-    const targetWidth = 72; // 72% as defined
-    let currentWidth = 0;
-    const step = 1;
-    
-    const interval = setInterval(() => {
-      currentWidth += step;
-      progressBar.style.width = currentWidth + '%';
+  links.forEach(link => {
+    link.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
       
-      if (currentWidth >= targetWidth) {
-        clearInterval(interval);
+      // Only prevent default if it's an anchor link
+      if (href !== '#') {
+        e.preventDefault();
+        
+        const targetId = href.substring(1);
+        const targetElement = document.getElementById(targetId);
+        
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
       }
-    }, 10);
-  }
-}
-
-/**
- * Save user preferences to localStorage
- */
-function saveUserPreferences(key, value) {
-  try {
-    localStorage.setItem(`aurea-luna-${key}`, JSON.stringify(value));
-  } catch (error) {
-    console.warn('localStorage not available:', error);
-  }
-}
-
-/**
- * Load user preferences from localStorage
- */
-function loadUserPreferences() {
-  try {
-    const theme = localStorage.getItem('aurea-luna-theme');
-    if (theme && theme === 'light') {
-      document.body.classList.add('light-mode');
-    }
-  } catch (error) {
-    console.warn('localStorage not available:', error);
-  }
-}
-
-/**
- * Log page performance metrics
- */
-window.addEventListener('load', function() {
-  if (window.performance && window.performance.timing) {
-    const perfData = window.performance.timing;
-    const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
-    console.log('Page fully loaded in:', pageLoadTime + 'ms');
-    
-    // Send performance metric to analytics if available
-    if (window.gtag) {
-      gtag('event', 'page_load_time', {
-        'value': pageLoadTime
-      });
-    }
-  }
-});
-
-/**
- * Detect and log any errors
- */
-window.addEventListener('error', function(event) {
-  console.error('Error detected:', event.error);
-  
-  // Send error to analytics if available
-  if (window.gtag) {
-    gtag('event', 'exception', {
-      'description': event.error ? event.error.message : 'Unknown error'
     });
-  }
-});
-
-/**
- * Handle visibility changes for analytics
- */
-document.addEventListener('visibilitychange', function() {
-  if (document.hidden) {
-    console.log('Page hidden');
-  } else {
-    console.log('Page visible');
-  }
-});
-
-/**
- * Export dashboard data for debugging
- */
-function exportDashboardData() {
-  const data = {
-    timestamp: new Date().toISOString(),
-    userAgent: navigator.userAgent,
-    pageTitle: document.title,
-    url: window.location.href
-  };
-  return data;
+  });
 }
 
-// Make functions globally available for testing
-window.aurealuna = {
-  updateProgressBar,
-  saveUserPreferences,
-  loadUserPreferences,
-  exportDashboardData
+// ===== ANIMATED PROGRESS BAR =====
+function initializeProgressBar() {
+  const progressBar = document.querySelector('.progress-bar-fill');
+  
+  if (progressBar) {
+    // Trigger animation on load
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animation = 'fill-animation 1.5s ease-out forwards';
+          observer.unobserve(entry.target);
+        }
+      });
+    });
+    
+    observer.observe(progressBar);
+  }
+}
+
+// ===== INTERSECTION OBSERVER FOR ANIMATIONS =====
+function initializeObservers() {
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -100px 0px'
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, observerOptions);
+
+  // Observe stat cards and collection cards
+  document.querySelectorAll('.stat-card, .coll-card, .check-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+    observer.observe(el);
+  });
+}
+
+// ===== ACCESSIBILITY IMPROVEMENTS =====
+function initializeAccessibility() {
+  // Add keyboard navigation for buttons
+  const buttons = document.querySelectorAll('button');
+  
+  buttons.forEach(button => {
+    button.addEventListener('keydown', (e) => {
+      // Allow Enter and Space to activate buttons
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        button.click();
+      }
+    });
+  });
+
+  // Add ARIA labels where needed
+  const progressBar = document.querySelector('.progress-bar-wrap');
+  if (progressBar) {
+    progressBar.setAttribute('role', 'progressbar');
+    progressBar.setAttribute('aria-valuenow', '72');
+    progressBar.setAttribute('aria-valuemin', '0');
+    progressBar.setAttribute('aria-valuemax', '100');
+    progressBar.setAttribute('aria-label', 'Progression du lancement: 72%');
+  }
+
+  // Add skip link for keyboard navigation
+  addSkipLink();
+}
+
+// ===== SKIP LINK FOR ACCESSIBILITY =====
+function addSkipLink() {
+  const skipLink = document.createElement('a');
+  skipLink.href = '#content';
+  skipLink.className = 'skip-link';
+  skipLink.textContent = 'Passer au contenu principal';
+  skipLink.style.cssText = `
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--gold);
+    color: #1a1a1a;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 100;
+    border-radius: 0 0 4px 0;
+  `;
+
+  skipLink.addEventListener('focus', () => {
+    skipLink.style.top = '0';
+  });
+
+  skipLink.addEventListener('blur', () => {
+    skipLink.style.top = '-40px';
+  });
+
+  document.body.insertBefore(skipLink, document.body.firstChild);
+
+  // Add ID to content div if it doesn't exist
+  const content = document.querySelector('.content');
+  if (content && !content.id) {
+    content.id = 'content';
+  }
+}
+
+// ===== RESPONSIVE NAVIGATION CHECK =====
+function checkResponsive() {
+  const width = window.innerWidth;
+  
+  if (width <= 768) {
+    // Mobile adjustments
+    document.body.style.fontSize = '14px';
+  } else {
+    document.body.style.fontSize = '16px';
+  }
+}
+
+window.addEventListener('resize', debounce(checkResponsive, 250));
+checkResponsive();
+
+// ===== UTILITY: DEBOUNCE =====
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// ===== THEME DATA VALIDATION =====
+const themeData = {
+  storeName: 'aurea-luna',
+  themeName: 'Shopistart',
+  themeId: '185565413667',
+  collections: 14,
+  progress: 72,
+  lastUpdate: new Date().toLocaleDateString('fr-FR')
+};
+
+console.log('🌙 Aurea·Luna Dashboard Initialized', themeData);
+
+// ===== EXPORT FOR EXTERNAL USE =====
+window.aureaSite = {
+  openShopifyThemes,
+  themeData,
+  version: '1.0.0'
 };
